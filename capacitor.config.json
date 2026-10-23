@@ -1,0 +1,13 @@
+{
+  "appId": "com.maaspusulasi.app",
+  "appName": "Maaş Pusulası",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,71 @@
+name: APK oluştur
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Java kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
+      - name: Paketleri yükle
+        run: npm install
+
+      - name: Android projesini oluştur
+        run: npx cap add android
+
+      - name: Simge ve açılış ekranı
+        continue-on-error: true
+        run: npx capacitor-assets generate --android
+
+      - name: Web dosyalarını kopyala
+        run: npx cap sync android
+
+      - name: Sabit imza anahtarını yerleştir (güncellemeler üstüne kurulabilsin)
+        run: |
+          mkdir -p ~/.android
+          cp keystore/debug.keystore ~/.android/debug.keystore
+
+      - name: APK derle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: APK'yı adlandır
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk MaasPusulasi.apk
+
+      - name: APK'yı yükle (Actions sayfasından indirilebilir)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaasPusulasi-apk
+          path: MaasPusulasi.apk
+
+      - name: Sürüm yayınla (Releases sayfasından indirilebilir)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.${{ github.run_number }}
+          name: Maaş Pusulası v1.${{ github.run_number }}
+          body: Telefonunuza indirip kurun. Eski sürümün üstüne kurulur, kayıtlarınız silinmez.
+          files: MaasPusulasi.apk

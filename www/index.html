@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Maaş Pusulası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: tek sütun, mobil öncelikli. Üstte piyasa şeridi, sonra form, sonra maaş dağılımı ve yatırım planı. */
+:root{
+  --bg:#EEF2FB; --surface:#FFFFFF; --ink:#141A2E; --muted:#5A6283; --line:#DCE2F2;
+  --accent:#00A67E; --accent2:#6C47FF; --accent-soft:#E3F8F1; --gold:#E29A00; --warn:#F06A1D; --bad:#E5364B; --good:#16A34A;
+  --c1:#00B386; --c2:#2E8BFF; --c3:#F5A700; --c4:#7B55FF; --c5:#FF5C7A; --c6:#8A93B2;
+  --glow1:rgba(0,179,134,.20); --glow2:rgba(108,71,255,.18); --shadow:rgba(30,40,90,.16); --shadow-strong:rgba(30,40,90,.28);
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B0F1E; --surface:#151B30; --ink:#EEF1FF; --muted:#9AA3C7; --line:#262E4C;
+  --accent:#2EE6B0; --accent2:#9B82FF; --accent-soft:#12302B; --gold:#FFC23D; --warn:#FF8A4C; --bad:#FF5A6E; --good:#4ADE80;
+  --c1:#2EE6B0; --c2:#4DA3FF; --c3:#FFC23D; --c4:#9B82FF; --c5:#FF6F8E; --c6:#7E88AE;
+  --glow1:rgba(46,230,176,.14); --glow2:rgba(155,130,255,.16); --shadow:rgba(0,0,0,.45); --shadow-strong:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B0F1E; --surface:#151B30; --ink:#EEF1FF; --muted:#9AA3C7; --line:#262E4C;
+  --accent:#2EE6B0; --accent2:#9B82FF; --accent-soft:#12302B; --gold:#FFC23D; --warn:#FF8A4C; --bad:#FF5A6E; --good:#4ADE80;
+  --c1:#2EE6B0; --c2:#4DA3FF; --c3:#FFC23D; --c4:#9B82FF; --c5:#FF6F8E; --c6:#7E88AE;
+  --glow1:rgba(46,230,176,.14); --glow2:rgba(155,130,255,.16); --shadow:rgba(0,0,0,.45); --shadow-strong:rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:radial-gradient(900px 500px at 0% -10%,var(--glow1),transparent 60%),radial-gradient(800px 500px at 100% 0%,var(--glow2),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:2.3rem;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:1.25rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.93rem}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 14px 34px -16px var(--shadow-strong),0 2px 6px -2px var(--shadow)}
+/* piyasa şeridi */
+.ticker{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tk{background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0;border-radius:12px;border:1px solid var(--line);border-top:3px solid var(--tkc,var(--accent));box-shadow:0 8px 18px -12px var(--shadow-strong)}
+.tk:nth-child(6n+1){--tkc:var(--c1)}.tk:nth-child(6n+2){--tkc:var(--c2)}.tk:nth-child(6n+3){--tkc:var(--c3)}.tk:nth-child(6n+4){--tkc:var(--c4)}.tk:nth-child(6n+5){--tkc:var(--c5)}.tk:nth-child(6n){--tkc:var(--accent2)}
+.tk .v{font-family:var(--f-mono);font-size:1.05rem;font-weight:500}
+.tk .d{font-size:.75rem;color:var(--muted)}
+.asof{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.8rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block}
+.dot.stale{background:var(--warn)}
+/* form */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:.85rem;font-weight:600}
+.field small{color:var(--muted);font-size:.78rem}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 11px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input.money{font-family:var(--f-mono)}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.9rem;padding:9px 6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;font-weight:600;box-shadow:0 6px 14px -6px var(--shadow-strong)}
+.debt{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:end;padding:12px 44px 12px 12px;border:1px dashed var(--line);border-radius:10px}
+.debt .dname,.debt .dtype,.debt .dminf{grid-column:span 2}
+.debt .x{position:absolute;top:6px;right:6px}
+@media (max-width:620px){.debt{grid-template-columns:1fr 1fr}.debt .dname,.debt .dtype{grid-column:span 1}}
+.btn{font:inherit;font-weight:600;border-radius:10px;padding:11px 16px;cursor:pointer;border:0;background:linear-gradient(100deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 8px 18px -8px var(--shadow-strong)}
+.btn.ghost{background:var(--surface);color:var(--accent);border:1px solid var(--accent);box-shadow:0 4px 12px -8px var(--shadow-strong)}
+.btn.small{padding:7px 11px;font-size:.85rem}
+.x{border:0;background:transparent;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:6px 8px;line-height:1}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* sonuç */
+.bar{display:flex;height:26px;border-radius:8px;overflow:hidden;background:var(--line)}
+.chartrow{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:center}
+.chartrow>*{min-width:0}
+@media (max-width:560px){.chartrow{grid-template-columns:1fr}.donut{max-width:230px;margin:0 auto}}
+.donut{width:100%;aspect-ratio:1;max-width:100%}
+.donut svg{width:100%;height:100%;overflow:visible}
+.donut .dseg{filter:drop-shadow(0 6px 6px var(--shadow-strong));transition:stroke-width .15s ease}
+.donut .dseg:hover{stroke-width:30}
+.donut .ring{stroke:var(--line)}
+.donut .cv{font-family:var(--f-mono);font-weight:500;fill:var(--ink)}
+.donut .cl{font-family:var(--f-body);fill:var(--muted);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.bar span{display:block;height:100%}
+.legend{display:flex;flex-direction:column;gap:0}
+.lg{display:grid;grid-template-columns:14px 1fr auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.lg:last-child{border-bottom:0}
+.sw{width:12px;height:12px;border-radius:3px}
+.lg .amt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
+.lg .pct{font-family:var(--f-mono);color:var(--muted);font-size:.8rem;min-width:44px;text-align:right}
+.lg .nm small{display:block;color:var(--muted);font-size:.78rem}
+.daily{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.daily div{background:linear-gradient(135deg,var(--accent-soft),var(--surface));border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0;box-shadow:0 10px 20px -14px var(--shadow-strong)}
+.daily div:nth-child(1){border-top:3px solid var(--c1)}.daily div:nth-child(2){border-top:3px solid var(--c2)}.daily div:nth-child(3){border-top:3px solid var(--c4)}
+.daily .v{font-family:var(--f-mono);font-size:1.15rem;font-weight:500}
+@media (max-width:420px){.daily .v{font-size:1rem}}
+.verdict{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);border-left:4px solid var(--muted);background:var(--surface);box-shadow:0 10px 22px -16px var(--shadow-strong)}
+.verdict.full{border-left-color:var(--good)}
+.verdict.part{border-left-color:var(--warn)}
+.verdict.min{border-left-color:var(--bad)}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--line);color:var(--ink)}
+.full .pill{background:var(--good);color:var(--surface)}
+.part .pill{background:var(--warn);color:var(--surface)}
+.min .pill{background:var(--bad);color:var(--surface)}
+.inv{display:flex;flex-direction:column;gap:12px}
+.ch{padding:14px;border:1px solid var(--line);border-left:4px solid var(--chc,var(--accent));border-radius:14px;display:flex;flex-direction:column;gap:8px;background:var(--surface);box-shadow:0 10px 22px -16px var(--shadow-strong)}
+.ch .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ch .amt{font-family:var(--f-mono);font-size:1.15rem;font-weight:500}
+.ch p{margin:0;color:var(--muted);font-size:.88rem}
+.funds{display:flex;flex-wrap:wrap;gap:6px}
+.fund{font-size:.8rem;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:var(--bg)}
+.fund b{font-family:var(--f-mono)}
+.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.why{font-size:.85rem;color:var(--muted)}
+.ai{white-space:pre-wrap;font-size:.92rem;background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--line)}
+.disc{font-size:.78rem;color:var(--muted);line-height:1.5}
+.src a{color:var(--accent)}
+.warnbox{background:var(--bg);border:1px solid var(--warn);color:var(--ink);border-radius:10px;padding:12px;font-size:.9rem}
+.summary{background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(120deg,var(--accent),var(--accent2)) border-box;border:2px solid transparent}
+.sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+@media (max-width:560px){.sumgrid{grid-template-columns:1fr}}
+.sumgrid table{width:100%;border-collapse:collapse;font-size:.92rem}
+.sumgrid th{text-align:left;font-weight:500;color:var(--muted);padding:7px 0;border-bottom:1px solid var(--line)}
+.sumgrid td{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500;padding:7px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+.sumgrid caption{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:10px 0 2px}
+.sumgrid tr.hl td,.sumgrid tr.hl th{color:var(--accent);font-weight:600}
+.sumgrid tr.neg td{color:var(--bad)}
+.calc{font-family:var(--f-mono);font-size:.95rem;padding:10px 11px;border-radius:9px;background:var(--accent-soft);min-height:44px;display:flex;align-items:center}
+.savebox{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:10px;background:var(--accent-soft)}
+.colhead{cursor:pointer;user-select:none}
+.tog{border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0}
+.tog svg{width:14px;height:14px;transition:transform .2s ease}
+section.panel.collapsed > :not(:first-child){display:none!important}
+section.panel.collapsed .tog svg{transform:rotate(-90deg)}
+section.panel.collapsed{gap:0;padding-block:12px}
+.hdrwrap{display:flex;align-items:center;gap:10px;min-width:0}
+.allbar{display:flex;gap:8px;flex-wrap:wrap}
+.acct{font:inherit;color:var(--ink);cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 18px -12px var(--shadow-strong);width:fit-content;max-width:100%;margin-bottom:12px}
+.acct img{width:30px;height:30px;border-radius:50%;flex:none;object-fit:cover}
+.acct .t{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.acct .n{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .s{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.acct .s i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block;flex:none}
+.acct[data-state="synced"] .s i{background:var(--good)}
+.acct[data-state="saving"] .s i{background:var(--gold)}
+.acct[data-state="error"] .s i{background:var(--bad)}
+@media (prefers-reduced-motion:no-preference){.bar span{transition:flex-basis .35s ease}}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button type="button" class="acct" id="acct" data-state="local" aria-controls="authSec">
+      <img id="acctImg" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='15' fill='%238A93B2'/%3E%3C/svg%3E">
+      <div class="t"><span class="n" id="acctName">Giriş yapın</span><span class="s"><i></i><span id="acctStatus">Kayıtlar bu cihazda</span></span></div>
+    </button>
+    <div class="label">Aylık bütçe ve yatırım planlayıcı</div>
+    <h1>Maaş Pusulası</h1>
+    <p class="sub">Maaşınızı, giderlerinizi ve borçlarınızı girin. Uygulama güncel piyasa verisine göre parayı faturalara, borca, günlük harcamaya, acil fona ve yatırıma böler.</p>
+    <div class="allbar" style="margin-top:10px">
+      <button class="btn ghost small" type="button" id="collapseAll">Tümünü küçült</button>
+      <button class="btn ghost small" type="button" id="expandAll">Tümünü aç</button>
+    </div>
+  </header>
+
+  <section class="panel" id="authSec" aria-labelledby="au" hidden>
+    <h2 id="au">Hesap</h2>
+    <div id="authOut">
+      <p class="sub" style="margin:0">Giriş yaparsanız kayıtlarınız buluta da yazılır ve başka telefonda aynı hesapla açtığınızda görünür. İnternet yokken uygulama yine çalışır, değişiklikler internet gelince gönderilir.</p>
+      <form id="authForm" class="grid2" style="margin-top:12px" novalidate>
+        <div class="field"><label for="email">E-posta</label><input id="email" type="email" autocomplete="email" inputmode="email" required></div>
+        <div class="field"><label for="pass">Şifre</label><input id="pass" type="password" autocomplete="current-password" minlength="6" required><small>En az 6 karakter</small></div>
+        <div class="row" style="grid-column:1/-1">
+          <button class="btn" type="submit" id="loginBtn">Giriş yap</button>
+          <button class="btn ghost" type="button" id="signupBtn">Hesap oluştur</button>
+        </div>
+      </form>
+    </div>
+    <div id="authIn" hidden>
+      <p style="margin:0">Giriş yapıldı: <b id="authEmail"></b></p>
+      <div class="row" style="margin-top:10px"><button class="btn ghost small" type="button" id="syncNow">Şimdi eşitle</button><button class="btn ghost small" type="button" id="logoutBtn">Çıkış yap</button></div>
+    </div>
+    <p class="sub" id="authMsg" role="status" style="margin:0"></p>
+  </section>
+
+  <section class="panel summary" aria-labelledby="sm">
+    <div class="row" style="justify-content:space-between;align-items:baseline">
+      <h2 id="sm">Bu ayın özeti</h2>
+      <span class="label" id="smDate"></span>
+    </div>
+    <div class="sumgrid" id="sumgrid"></div>
+    <div id="sumWarn"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="mk">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="mk">Piyasa bugün</h2>
+      <div class="asof"><span class="dot" id="dot"></span><span id="asof">Yükleniyor…</span></div>
+    </div>
+    <div class="ticker" id="ticker"></div>
+    <p class="disc" id="mknote"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="f1">
+    <h2 id="f1">1. Gelir ve sabit giderler</h2>
+    <div class="grid2">
+      <div class="field"><label for="salary">Net aylık maaş (TL)</label><input id="salary" class="money" inputmode="numeric" value="65.000"></div>
+      <div class="field"><label for="extra">Ek gelir (TL)</label><input id="extra" class="money" inputmode="numeric" value="0"><small>Kira geliri, yan iş vb.</small></div>
+      <div class="field"><label for="rent">Kira / konut (TL)</label><input id="rent" class="money" inputmode="numeric" value="18.000"></div>
+      <div class="field"><label for="bills">Faturalar, aidat, internet (TL)</label><input id="bills" class="money" inputmode="numeric" value="4.500"></div>
+      <div class="field"><label for="otherfix">Diğer sabit (sigorta, okul, abonelik)</label><input id="otherfix" class="money" inputmode="numeric" value="1.500"></div>
+      <div class="field"><label for="daily">Günlük harcama hedefi (TL/gün)</label><input id="daily" class="money" inputmode="numeric" value="" placeholder="Boş bırakın, öneri hesaplansın"><small>Market, yemek, ulaşım, kişisel harcama</small></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="f2">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="f2">2. Borçlar</h2>
+      <button class="btn ghost small" id="addDebt" type="button">+ Borç ekle</button>
+    </div>
+    <p class="sub" style="margin:0">Türü seçip güncel borcunuzu yazın. Kartta asgari tutar limitinize göre hesaplanır (100.000 TL üzeri limit %40, altı %20). Faizler internetten güncel olarak alınır.</p>
+    <div id="debts" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="f3">
+    <h2 id="f3">3. Birikim ve tercihler</h2>
+    <div class="grid2">
+      <div class="field"><label for="savings">Kenardaki birikmiş param (TL)</label><input id="savings" class="money" inputmode="numeric" value="20.000"><small>Nakit, vadesiz/vadeli hesap, PPF gibi hemen kullanabileceğiniz toplam</small></div>
+      <div class="field"><label for="horizon">Yatırım vadesi</label>
+        <select id="horizon"><option value="6">6 aydan kısa</option><option value="12">6–12 ay</option><option value="36" selected>1–3 yıl</option><option value="60">3 yıldan uzun</option></select></div>
+    </div>
+    <div class="field"><span class="label" id="risklbl">Risk tercihi</span>
+      <div class="seg" role="group" aria-labelledby="risklbl" id="risk">
+        <button type="button" data-v="low">Temkinli</button>
+        <button type="button" data-v="mid" aria-pressed="true">Dengeli</button>
+        <button type="button" data-v="high">Atak</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="r1" id="result">
+    <h2 id="r1">Maaşınızın bu ayki dağılımı</h2>
+    <div class="chartrow">
+      <div class="donut" id="bar" role="img" aria-label="Maaş dağılımı grafiği"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="daily" id="dailyBox"></div>
+    <div id="warns"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="r2" id="debtSec">
+    <h2 id="r2">Borçları nasıl ödeyeyim?</h2>
+    <div id="verdicts" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="r5">
+    <h2 id="r5">Kenardaki birikimim ne yapsın?</h2>
+    <div id="saveAdvice" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="r3">
+    <div class="row" style="justify-content:space-between;align-items:baseline">
+      <h2 id="r3">Yatırım tutarını nereye koyayım?</h2>
+      <span class="num" id="invTotal"></span>
+    </div>
+    <div class="field" style="max-width:320px">
+      <label for="invOverride">Farklı bir tutar dağıtmak isterseniz (TL)</label>
+      <input id="invOverride" class="money" inputmode="numeric" placeholder="Boş: plandaki yatırım tutarı">
+    </div>
+    <div class="inv" id="inv"></div>
+    <div class="why" id="why"></div>
+  </section>
+
+
+  <p class="disc">Bu uygulama genel bilgilendirme amaçlıdır, yatırım danışmanlığı değildir. Fonların geçmiş getirisi gelecekteki getiriyi garanti etmez. Önemli kararlarda lisanslı bir yatırım danışmanına danışın. Fon kodlarını alım öncesi TEFAS'ta doğrulayın.</p>
+  <p class="disc src" id="sources"></p>
+</div>
+
+<script>
+// ---- Yedek piyasa verisi (23.10.2026). İnternet varken market.json ve TCMB'den güncellenir. ----
+const FALLBACK = {
+  asOf:"2026-10-23T09:10:00+03:00",
+  usdtry:49.74, usdPrev:49.63, eurtry:55.80, eurPrev:55.80,
+  gramAltin:6434.41, gramPrev:6424.84, onsAltin:4021.23,
+  policyRate:36, policyNote:"22 Ekim'de %37'den %36'ya indirildi",
+  inflationAnnual:29.73, inflationMonthly:1.84, inflationPeriod:"Eylül 2026",
+  ppf1y:45.95, ppf1m:3.02, deposit32:40.18,
+  bistNote:"11.000 puanın altında",
+  cc:{t1:3.25,t2:3.75,t3:4.25,cash:4.25,late1:3.55,late2:4.05,late3:4.55,validFrom:"1 Kasım 2026"},
+  kmhRate:4.25, kmhNote:"TCMB TL nakit kullanım azami oranı",
+  loanAvg:3.86, loanMin:3.14, loanMax:5.33, loanNote:"ihtiyaç kredisi, 9 banka ortalaması",
+  taxRate:30,
+  funds:{
+    ppf:[], gold:[], fx:[],
+    equityTR:[{code:"PTO",name:"Pardus Portföy Temettü Ödeyen Şirketler Hisse Senedi",ytd:66.13}],
+    global:[{code:"GUH",name:"Garanti Portföy Yabancı Teknoloji Hisse Senedi",ytd:46.47},{code:"YIT",name:"Garanti Portföy Yarı İletken Teknolojileri Değişken",ytd:58.92}],
+    participation:[{code:"KTJ",name:"Kuveyt Türk Portföy Teknoloji Katılım",ytd:54.21},{code:"BTK",name:"BV Portföy Teknoloji Katılım",ytd:61.91}],
+    bond:[{code:"BBP",name:"Allbatross Portföy Birinci Borçlanma Araçları",ytd:76.03}]
+  },
+  sources:[
+    {t:"TCMB kredi kartı azami faizleri",u:"https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Bankacilik+Verileri/Kredi_Karti_Islemlerinde_Uygulanacak_Azami_Faiz_Oranlari"},
+    {t:"Diken – döviz açılış",u:"https://www.diken.com.tr/dolar-ve-avro-gune-nasil-basladi-23-ekim-2026/"},
+    {t:"Diken – gram altın",u:"https://www.diken.com.tr/gram-altin-gune-nasil-basladi-23-ekim-2026/"},
+    {t:"PPK kararı (İnternet Haber)",u:"https://www.internethaber.com/merkez-bankasi-faizi-yuzde-36ya-dusurdu-ekim-2026-faiz-kararinin-ayrintilari-beklentiler-ne-yondeydi-foto-galerisi-2465306.htm"},
+    {t:"Eylül enflasyonu (Evrensel)",u:"https://www.evrensel.net/haber/6003473/tuik-eylul-ayi-enflasyon-verilerini-acikladi-aylik-yuzde-184-yillik-2973"},
+    {t:"PPF ve mevduat (yatirimci.ai)",u:"https://yatirimci.ai/fon/para-piyasasi-fonu-mu-mevduat-mi"},
+    {t:"YTD fon getirileri (FonVeri)",u:"https://fonveri.com/yilbasi-getiri-liderleri"},
+    {t:"İhtiyaç kredisi faizleri (okredi)",u:"https://okredi.com.tr/ihtiyac-kredisi"}
+  ]
+};
+let M = FALLBACK;
+
+// ---- yardımcılar ----
+const $ = s=>document.querySelector(s);
+const fmt = (n,d=0)=>isFinite(n)?n.toLocaleString("tr-TR",{minimumFractionDigits:d,maximumFractionDigits:d}):"–";
+const tl = n=>fmt(Math.round(n))+" ₺";
+const parse = v=>{const s=String(v||"").replace(/\./g,"").replace(",",".").replace(/[^\d.\-]/g,"");const n=parseFloat(s);return isFinite(n)?n:0};
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function donut(items,total,label,value){
+  const r=72,C=2*Math.PI*r,gap=items.length>1?3:0;let off=0;
+  const segs=items.filter(it=>it.v>0).map(it=>{const len=Math.max(0,it.v/total*C-gap);const s=`<circle class="dseg" cx="100" cy="100" r="${r}" fill="none" stroke-width="26" style="stroke:${it.c}" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"><title>${esc(it.n)}: %${fmt(it.v/total*100,0)}</title></circle>`;off+=it.v/total*C;return s}).join("");
+  return `<svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring" cx="100" cy="100" r="${r}" fill="none" stroke-width="26"/>${segs}<text class="cl" x="100" y="92" text-anchor="middle">${esc(label)}</text><text class="cv" x="100" y="115" text-anchor="middle" font-size="${value.length>10?15:17}">${esc(value)}</text></svg>`;
+}
+const store = {get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+// para giriş alanlarını binlik ayırıcıyla biçimle
+document.addEventListener("blur",e=>{if(e.target.classList&&e.target.classList.contains("money")&&e.target.value.trim()!==""){e.target.value=fmt(parse(e.target.value))}},true);
+
+// ---- piyasa şeridi ----
+function chg(a,b){if(!b||!a)return "";const p=(a-b)/b*100;return (p>=0?"▲ ":"▼ ")+fmt(Math.abs(p),2)+"%"}
+function renderMarket(){
+  const t=[
+    ["Dolar/TL",fmt(M.usdtry,2),(chg(M.usdtry,M.usdPrev)+(M.fxNote?" · "+M.fxNote:"")).trim()],
+    ["Euro/TL",fmt(M.eurtry,2),chg(M.eurtry,M.eurPrev)],
+    ["Gram altın",fmt(M.gramAltin,0)+" ₺",chg(M.gramAltin,M.gramPrev)],
+    ["Ons altın",fmt(M.onsAltin,0)+" $",""],
+    ["Politika faizi","%"+fmt(M.policyRate,1),M.policyNote||""],
+    ["Yıllık enflasyon","%"+fmt(M.inflationAnnual,2),(M.inflationPeriod||"")+" · aylık %"+fmt(M.inflationMonthly,2)],
+    ["PPF medyan (1 yıl)","%"+fmt(M.ppf1y,2),"son 1 ay %"+fmt(M.ppf1m,2)],
+    ["Mevduat 32 gün (brüt)","%"+fmt(M.deposit32,2),"yıllık ort."],
+    ["Kart akdi faiz","%"+fmt(M.cc.t1,2)+"–"+fmt(M.cc.t3,2),"aylık · "+(M.cc.validFrom||"")],
+    ["Eksi hesap faizi","%"+fmt(M.kmhRate||M.cc.cash,2),"aylık · azami"],
+    ["İhtiyaç kredisi","%"+fmt(M.loanAvg,2),"aylık ortalama"],
+  ];
+  $("#ticker").innerHTML=t.map(x=>`<div class="tk"><span class="label">${x[0]}</span><span class="v">${esc(x[1])}</span><span class="d">${esc(x[2])}</span></div>`).join("");
+  const d=new Date(M.asOf), hrs=(Date.now()-d)/36e5;
+  $("#asof").textContent="Güncelleme: "+d.toLocaleString("tr-TR",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});
+  $("#dot").classList.toggle("stale",hrs>30);
+  $("#mknote").textContent=(M.bistNote?"BIST 100: "+M.bistNote+". ":"")+"İnternet varken güncellenir; çevrimdışıyken son kaydedilen veri gösterilir.";
+  $("#sources").innerHTML="Kaynaklar: "+(M.sources||[]).map(s=>`<a href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join(" · ");
+}
+
+// ---- borç satırları ----
+const DTYPES={card:"Kredi kartı",kmh:"Eksi hesap (KMH)",loan:"Kredi"};
+let debts = (store.get("mp_debts2")) || [
+  {type:"card",bal:28000,limit:60000,inst:0},
+  {type:"loan",bal:60000,limit:0,inst:4200}
+];
+const TAX=()=>1+(M.taxRate??30)/100;            // KKDF + BSMV
+function cardRate(b){return b<30000?M.cc.t1:b<=180000?M.cc.t2:M.cc.t3}
+function rateOf(d){return d.type==="card"?cardRate(d.bal):d.type==="kmh"?(M.kmhRate||M.cc.cash):(M.loanAvg||3.86)}
+function minPctOf(d){return d.limit>100000?40:20}
+function minOf(d){
+  if(d.type==="card") return Math.min(d.bal, d.bal*minPctOf(d)/100);
+  if(d.type==="kmh") return Math.min(d.bal, d.bal*rateOf(d)/100*TAX());   // en az bu ayın faizi + vergiler
+  return Math.min(d.inst||0, d.bal||d.inst||0);
+}
+function rateText(d){
+  if(d.type==="card") return `Aylık %${fmt(rateOf(d),2)} akdi faiz · TCMB azami, borç ${d.bal<30000?"30.000 TL altı":d.bal<=180000?"30.000–180.000 TL":"180.000 TL üstü"}`;
+  if(d.type==="kmh") return `Aylık %${fmt(rateOf(d),2)} · ${M.kmhNote||"TCMB azami oran"}. Bankanızınki daha düşük olabilir.`;
+  return `Aylık ~%${fmt(rateOf(d),2)} · ${M.loanNote||"ihtiyaç kredisi ortalaması"} (aralık %${fmt(M.loanMin,2)}–%${fmt(M.loanMax,2)})`;
+}
+function renderDebts(){
+  $("#debts").innerHTML=debts.map((d,i)=>{
+    const third = d.type==="card"
+      ? `<div class="field"><label for="dl${i}">Kart limiti</label><input id="dl${i}" class="money" data-k="limit" inputmode="numeric" value="${fmt(d.limit)}"></div>`
+      : d.type==="loan"
+      ? `<div class="field"><label for="di${i}">Aylık taksit</label><input id="di${i}" class="money" data-k="inst" inputmode="numeric" value="${fmt(d.inst)}"></div>`
+      : `<div class="field"><span class="label" style="text-transform:none;letter-spacing:0;font-size:.85rem;color:var(--ink)">Limit</span><div class="calc" style="background:transparent;color:var(--muted);font-family:var(--f-body);font-size:.82rem">Gerekmez</div></div>`;
+    const minLbl = d.type==="card"?`Asgari (%${minPctOf(d)})`:d.type==="kmh"?"Asgari (faiz)":"Bu ay ödenecek";
+    return `
+    <div class="debt" data-i="${i}">
+      <div class="field dname"><label for="dn${i}">Borcun adı</label><input id="dn${i}" data-k="name" maxlength="40" placeholder="Örn. Bonus kart, Garanti eksi hesap" value="${esc(d.name||"")}"></div>
+      <div class="field dtype"><label for="dt${i}">Tür</label><select id="dt${i}" data-k="type">${Object.entries(DTYPES).map(([k,v])=>`<option value="${k}" ${k===d.type?"selected":""}>${v}</option>`).join("")}</select></div>
+      <div class="field"><label for="db${i}">${d.type==="loan"?"Kalan borç":"Güncel borç"}</label><input id="db${i}" class="money" data-k="bal" inputmode="numeric" value="${fmt(d.bal)}"></div>
+      ${third}
+      <div class="field dminf"><span class="label minlbl" style="text-transform:none;letter-spacing:0;font-size:.85rem;color:var(--ink)">${minLbl}</span><div class="calc" id="dmin${i}">${tl(minOf(d))}</div></div>
+      <button class="x" type="button" aria-label="Borcu sil" data-del="${i}">×</button>
+      <small style="grid-column:1/-1;color:var(--muted);font-size:.78rem" id="drate${i}">${esc(rateText(d))}</small>
+    </div>`}).join("") || `<p class="sub" style="margin:0">Borç yok. Varsa “Borç ekle” ile girin.</p>`;
+}
+function refreshDebtCalcs(){debts.forEach((d,i)=>{const m=document.getElementById("dmin"+i),r=document.getElementById("drate"+i);if(m)m.textContent=tl(minOf(d));if(r)r.textContent=rateText(d)})}
+$("#debts").addEventListener("input",e=>{
+  const row=e.target.closest(".debt");if(!row)return;const d=debts[+row.dataset.i],k=e.target.dataset.k;
+  if(k==="type")return;
+  if(k==="name"){d.name=e.target.value;compute();return}
+  d[k]=parse(e.target.value);
+  if(k==="limit"){const lbl=row.querySelector(".minlbl");if(lbl)lbl.textContent=`Asgari (%${minPctOf(d)})`}
+  refreshDebtCalcs();compute();
+});
+$("#debts").addEventListener("change",e=>{if(e.target.dataset.k==="type"){const i=+e.target.closest(".debt").dataset.i;debts[i].type=e.target.value;renderDebts();compute()}});
+$("#debts").addEventListener("click",e=>{if(e.target.dataset.del!=null){debts.splice(+e.target.dataset.del,1);renderDebts();compute()}});
+$("#addDebt").onclick=()=>{debts.push({type:"card",name:"",bal:0,limit:0,inst:0});renderDebts();compute();const n=document.getElementById("dn"+(debts.length-1));if(n)n.focus()};
+
+// ---- risk ----
+let risk="mid";
+$("#risk").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;risk=b.dataset.v;
+  $("#risk").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));compute()});
+
+// ---- ana hesap ----
+let LAST=null;
+function compute(){
+  const S=parse($("#salary").value)+parse($("#extra").value);
+  const fixed={rent:parse($("#rent").value),bills:parse($("#bills").value),other:parse($("#otherfix").value)};
+  const F=fixed.rent+fixed.bills+fixed.other;
+  const savings=parse($("#savings").value), horizon=+$("#horizon").value;
+  const ppfM=(M.ppf1m||3)/100*0.85;           // PPF'nin tahmini aylık net getirisi (stopaj payı düşülerek)
+  const warns=[];
+
+  // 1) zorunlu: sabit giderler + kredi taksitleri + kart asgari
+  const cnt={};const many=t=>debts.filter(x=>x.type===t).length>1;
+  const D=debts.filter(d=>d.bal>0||d.inst>0).map(d=>{cnt[d.type]=(cnt[d.type]||0)+1;return {...d,r:rateOf(d),min:minOf(d),name:(d.name&&d.name.trim())||(DTYPES[d.type]+(many(d.type)?" "+cnt[d.type]:""))}});
+  const loans=D.filter(d=>d.type==="loan"), revolv=D.filter(d=>d.type!=="loan");
+  const inst=loans.reduce((a,d)=>a+d.min,0);
+  const mins=revolv.reduce((a,d)=>a+Math.min(d.min,d.bal),0);
+  let A=S-F-inst-mins;
+
+  // 2) günlük yaşam
+  const dailyIn=parse($("#daily").value);
+  let L;
+  if(dailyIn>0) L=dailyIn*30;
+  else { const base=Math.max(0,S-F-inst); L=Math.max(Math.min(base*0.42, A>0?A*0.6:0), Math.min(A, S*0.15)); }
+  if(A<0){warns.push(`Sabit giderler ve zorunlu borç ödemeleri gelirinizi ${tl(-A)} aşıyor. Önce giderleri kısmak ya da bankayla yapılandırma görüşmek gerekiyor.`);L=0}
+  if(L>A&&A>=0){warns.push(`Girdiğiniz günlük harcama hedefi bütçeyi aşıyor. Plan, kalan ${tl(A)} ile hesaplandı; günlük ${tl(A/30)} ile sınırlı kalmanız gerekir.`);L=Math.max(0,A)}
+  let R=Math.max(0,A-L);
+
+  // 3) acil fon tabanı ve kart/KMH borcunun kapatılması
+  const monthlyNeed=F+inst+L;
+  const emTarget=monthlyNeed*(risk==="low"?6:3);
+  let em=0;
+  if(savings<monthlyNeed && R>0){ em=Math.min(R*0.15, monthlyNeed-savings); R-=em; }
+  const pay=[];
+  revolv.sort((a,b)=>b.r-a.r).forEach(d=>{
+    const minPay=Math.min(d.min,d.bal), rest=Math.max(0,d.bal-minPay);
+    let extra=0;
+    if(d.r*TAX()>ppfM*100) extra=Math.min(rest,R);
+    R-=extra;
+    pay.push({d,minPay,extra,total:minPay+extra,remain:rest-extra});
+  });
+  const extraDebt=pay.reduce((a,p)=>a+p.extra,0);
+  const revolvRemain=pay.reduce((a,p)=>a+p.remain,0);
+
+  // 4) acil fon tamamlama (kart borcu bittiyse)
+  if(revolvRemain<1 && R>0 && savings+em<emTarget){ const add=Math.min(emTarget-savings-em,R*0.4); em+=add; R-=add; }
+
+  // 5) kredi ara ödemesi
+  let prepay=0, prepayLoan=null;
+  const hiLoan=loans.filter(l=>l.r*TAX()>ppfM*100+0.5).sort((a,b)=>b.r-a.r)[0];
+  if(hiLoan&&revolvRemain<1&&R>0){prepay=Math.min(R*0.3,hiLoan.bal-hiLoan.min);prepay=Math.max(0,prepay);R-=prepay;prepayLoan=hiLoan}
+
+  const invest=Math.max(0,R);
+
+  // 6) kenardaki birikim: 1 aylık gideri koru, fazlasıyla kart/KMH kapat, acil fon hedefinin üstünü yatır
+  const keep1=monthlyNeed;
+  let sav=savings, savToDebt=0, savToInvest=0;
+  const savPay=[];
+  if(revolvRemain>0 && sav>keep1){
+    let pool=sav-keep1;
+    pay.slice().sort((a,b)=>b.d.r-a.d.r).forEach(p=>{const x=Math.min(p.remain,pool);if(x>0){savPay.push({p,x});pool-=x;savToDebt+=x}});
+    sav-=savToDebt;
+  }
+  const revolvAfterSav=revolvRemain-savToDebt;
+  if(revolvAfterSav<1 && sav+em>emTarget){savToInvest=sav+em-emTarget; sav-=savToInvest}
+  const interestSaved=savPay.reduce((a,s)=>a+s.x*s.p.d.r/100*TAX(),0);
+
+  LAST={S,F,fixed,inst,mins,L,em,extraDebt,prepay,invest,pay,loans,savings,emTarget,monthlyNeed,horizon,risk,revolvRemain,ppfM,
+    savToDebt,savToInvest,savPay,savLeft:sav,interestSaved,revolvAfterSav,totalDebt:D.reduce((a,d)=>a+d.bal,0),debtsD:D};
+
+  // ---- dağılım çubuğu ----
+  const parts=[
+    ["Sabit giderler",F,"var(--c6)","Kira "+tl(fixed.rent)+" · faturalar "+tl(fixed.bills)+" · diğer "+tl(fixed.other)],
+    ["Kredi taksitleri",inst,"var(--c5)",loans.length?loans.length+" kredi":"Kredi yok"],
+    ["Kart / eksi hesap ödemesi",mins+extraDebt,"var(--bad)",extraDebt>0?"Asgari "+tl(mins)+" + ek "+tl(extraDebt):"Asgari tutarlar"],
+    ["Günlük yaşam",L,"var(--c2)","Market, yemek, ulaşım, kişisel"],
+    ["Acil durum fonu",em,"var(--c4)","Hedef "+tl(emTarget)+" · mevcut "+tl(savings)],
+    ["Kredi ara ödemesi",prepay,"var(--warn)",prepayLoan?(prepayLoan.name||"Kredi")+" anaparasına":""],
+    ["Yatırım",invest,"var(--c1)","Aşağıdaki plana göre"],
+  ].filter(p=>p[1]>0.5);
+  const tot=Math.max(S,parts.reduce((a,p)=>a+p[1],0))||1;
+  $("#bar").innerHTML=donut(parts.map(p=>({v:p[1],c:p[2],n:p[0]})),tot,"Net gelir",tl(S));
+  $("#legend").innerHTML=parts.map(p=>`<div class="lg"><span class="sw" style="background:${p[2]}"></span><span class="nm">${p[0]}<small>${esc(p[3])}</small></span><span class="pct">%${fmt(p[1]/(S||1)*100,0)}</span><span class="amt">${tl(p[1])}</span></div>`).join("");
+  $("#dailyBox").innerHTML=`<div><span class="label">Günlük</span><span class="v">${tl(L/30)}</span></div><div><span class="label">Haftalık</span><span class="v">${tl(L/30*7)}</span></div><div><span class="label">Aylık</span><span class="v">${tl(L)}</span></div>`;
+  $("#warns").innerHTML=warns.map(w=>`<div class="warnbox">${esc(w)}</div>`).join("");
+
+  // ---- borç kararları ----
+  const v=[];
+  pay.forEach(p=>{
+    const d=p.d, nm=esc(d.name||DTYPES[d.type]);
+    const carry=p.remain*d.r/100*TAX();
+    const sp=LAST.savPay.find(s=>s.p===p);
+    const savLine=sp?`<div class="why">Kenardaki birikiminizden <b class="num">${tl(sp.x)}</b> ile bu borcun ${sp.x>=p.remain-1?"kalanını tamamen kapatın":"bir kısmını kapatın"}. Aşağıdaki birikim bölümüne bakın.</div>`:"";
+    if(p.remain<1){
+      v.push(`<div class="verdict full"><div class="row"><span class="pill">Tamamını öde</span><h3>${nm}</h3></div>
+        <div><b class="num">${tl(p.total)}</b> ödeyin. Vergilerle aylık ~%${fmt(d.r*TAX(),2)} maliyet, PPF'nin aylık net ~%${fmt(ppfM*100,2)} getirisinden yüksek. Borcu kapatmak en garantili “getiri”.</div></div>`);
+    } else if(p.extra>0){
+      v.push(`<div class="verdict part"><div class="row"><span class="pill">Asgari + ek ödeme</span><h3>${nm}</h3></div>
+        <div>Bu ay <b class="num">${tl(p.total)}</b> ödeyin (asgari ${tl(p.minPay)} + ek ${tl(p.extra)}). Kalan ${tl(p.remain)} için yaklaşık <b class="num">${tl(carry)}</b> faiz ve vergi işler. Bu ay yatırım yerine bu borcu kapatmaya öncelik verildi.</div>${savLine}</div>`);
+    } else {
+      v.push(`<div class="verdict min"><div class="row"><span class="pill">Sadece asgari</span><h3>${nm}</h3></div>
+        <div>Bütçe yalnızca asgari ${tl(p.minPay)} ödemeye yetiyor. Kalan ${tl(p.remain)} için ayda ~${tl(carry)} faiz işler. Asgarinin altına düşmeyin: gecikme faizi (%${fmt(M.cc.late1,2)}+) ve kredi notu etkilenir. Günlük harcamayı biraz kısmak bu borcu daha hızlı kapatır.</div>${savLine}</div>`);
+    }
+  });
+  loans.forEach(l=>{
+    const nm=esc(l.name||"Kredi");
+    if(prepayLoan===l&&prepay>0) v.push(`<div class="verdict part"><div class="row"><span class="pill">Taksit + ara ödeme</span><h3>${nm}</h3></div><div>Taksit ${tl(l.min)} + ara ödeme ${tl(prepay)}. Aylık %${fmt(l.r,2)} faiz yatırım getirisini geçiyor; ara ödemeyi bankaya “vade kısaltma” olarak yaptırın.</div></div>`);
+    else v.push(`<div class="verdict full"><div class="row"><span class="pill">Taksite devam</span><h3>${nm}</h3></div><div>Taksit ${tl(l.min)}. ${l.r>ppfM*100+0.5?"Faizi yüksek, kart borçlarınız bitince ara ödeme önerilecek.":"Faizi düşük, erken kapatmak yerine fazlayı yatırıma yönlendirmek daha mantıklı."}</div></div>`);
+  });
+  $("#verdicts").innerHTML=v.join("")||`<p class="sub" style="margin:0">Borç girmediniz. Tüm fazla tutar acil fon ve yatırıma gidiyor.</p>`;
+
+  renderInvest();
+  renderSavings();
+  renderSummary();
+  saveInputs();
+}
+
+function renderSavings(){
+  const P=LAST, out=[];
+  if(P.savings<1){$("#saveAdvice").innerHTML=`<p class="sub" style="margin:0">Birikim girmediniz. Yukarıdaki “Kenardaki birikmiş param” alanına yazarsanız ne yapmanız gerektiğini burada görürsünüz.</p>`;return}
+  if(P.savToDebt>0){
+    out.push(`<div class="verdict full"><div class="row"><span class="pill">Borç kapat</span><h3>${tl(P.savToDebt)} ile kart / eksi hesap borcu</h3></div>
+      <div>${P.savPay.map(s=>`${esc(s.p.d.name)}: ${tl(s.x)}`).join(" · ")}. Böylece ayda yaklaşık <b class="num">${tl(P.interestSaved)}</b> faiz ve vergiden kurtulursunuz. Birikimin getirisi bu maliyetin altında kalıyor.</div></div>`);
+  }
+  out.push(`<div class="verdict ${P.savLeft+P.em>=P.emTarget?"full":"part"}"><div class="row"><span class="pill">Acil fon</span><h3>${tl(P.savLeft)} kenarda kalsın</h3></div>
+    <div>Hedef ${tl(P.emTarget)} (${P.risk==="low"?6:3} aylık zorunlu gider). Bu parayı vadesiz hesapta değil, günlük çekilebilen bir para piyasası fonunda tutun. ${P.savLeft+P.em<P.emTarget?`Hedefe ${tl(P.emTarget-P.savLeft-P.em)} kaldı; maaştan her ay pay ayrılıyor.`:"Hedef tamam."}</div></div>`);
+  if(P.savToInvest>0){
+    const {w}=weights();
+    const rows=Object.entries(w).filter(([,p])=>p>0.5).sort((a,b)=>b[1]-a[1]);
+    out.push(`<div class="verdict full"><div class="row"><span class="pill">Yatır</span><h3>${tl(P.savToInvest)} tek seferlik yatırım</h3></div>
+      <div>Acil fon hedefinin üstündeki birikim, aylık planla aynı oranlarda: ${rows.map(([k,p])=>`${CH[k].n.split(" (")[0]} <b class="num">${tl(P.savToInvest*p/100)}</b>`).join(" · ")}. İsterseniz tek seferde değil 3–4 aya bölerek girin.</div></div>`);
+  }
+  $("#saveAdvice").innerHTML=out.join("");
+}
+
+function renderSummary(){
+  const P=LAST;
+  const sumBy=t=>P.debtsD.filter(d=>d.type===t).reduce((a,d)=>a+d.bal,0);
+  const debtPayMonth=P.inst+P.mins+P.extraDebt+P.prepay;
+  const tbl=(cap,rows)=>`<table><caption>${cap}</caption><tbody>${rows.map(r=>`<tr class="${r[2]||""}"><th scope="row">${r[0]}</th><td>${r[1]}</td></tr>`).join("")}</tbody></table>`;
+  const left=tbl("Gelir ve harcama",[
+    ["Net gelir",tl(P.S)],
+    ["Sabit giderler",tl(P.F)],
+    ["Borç ödemeleri (bu ay)",tl(debtPayMonth)],
+    ["Günlük yaşam bütçesi",tl(P.L)],
+    ["Günlük harcama limiti",tl(P.L/30)+" /gün","hl"],
+    ["Acil fona ayrılan",tl(P.em)],
+    ["Bu ay yatırıma",tl(P.invest),"hl"],
+  ]);
+  const right=tbl("Borç ve birikim",[
+    ["Kredi kartı borcu",tl(sumBy("card"))],
+    ["Eksi hesap borcu",tl(sumBy("kmh"))],
+    ["Kredi borcu",tl(sumBy("loan"))],
+    ["Ay sonu kalan kart + eksi hesap",tl(Math.max(0,P.revolvAfterSav)),P.revolvAfterSav>1?"neg":""],
+    ["Kenardaki birikim",tl(P.savings)],
+    ["Birikimden borca / yatırıma",tl(P.savToDebt)+" / "+tl(P.savToInvest)],
+    ["Acil fon (kalan / hedef)",tl(P.savLeft+P.em)+" / "+tl(P.emTarget)],
+  ]);
+  const mk=tbl("Piyasa",[
+    ["Dolar / Euro",fmt(M.usdtry,2)+" / "+fmt(M.eurtry,2)],
+    ["Gram altın",fmt(M.gramAltin,0)+" ₺"],
+    ["Politika faizi / enflasyon","%"+fmt(M.policyRate,1)+" / %"+fmt(M.inflationAnnual,1)],
+  ]);
+  const {w}=weights();
+  const top=Object.entries(w).filter(([,p])=>p>0.5).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const inv=tbl("Yatırım dağılımı (ilk 3)",P.invest>0?top.map(([k,p])=>[CH[k].n.split(" (")[0].replace(" / mevduat",""),tl(P.invest*p/100)]):[["Bu ay yatırım yok","–"]]);
+  $("#sumgrid").innerHTML=`<div>${left}${inv}</div><div>${right}${mk}</div>`;
+  $("#smDate").textContent=new Date().toLocaleDateString("tr-TR",{month:"long",year:"numeric"});
+  const w2=[];
+  if(P.S-P.F-P.inst-P.mins<0) w2.push("Zorunlu ödemeler gelirden fazla.");
+  $("#sumWarn").innerHTML=w2.map(x=>`<div class="warnbox">${esc(x)}</div>`).join("");
+}
+
+// ---- yatırım dağılımı ----
+const CH={
+  ppf:{n:"TL para piyasası fonu / mevduat",c:"var(--c1)",d:"Günlük likit, düşük risk. Faiz enflasyonun üstündeyken TL'de kalmanın ana aracı."},
+  bond:{n:"Borçlanma araçları fonu",c:"var(--c2)",d:"Faiz indirim döneminde tahvil fiyatları yükselebilir. PPF'den biraz daha oynak."},
+  gold:{n:"Altın (gram veya altın fonu)",c:"var(--c3)",d:"Kur ve kriz sigortası. Fiziki yerine banka hesabı ya da altın fonu daha düşük maliyetli."},
+  fx:{n:"Döviz / eurobond fonu",c:"var(--c6)",d:"TL değer kaybına karşı denge. Faiz yüksekken getirisi TL'nin gerisinde kalabilir."},
+  equityTR:{n:"BIST hisse senedi fonu",c:"var(--c5)",d:"Uzun vadede enflasyonu yenme potansiyeli, kısa vadede sert dalgalanma."},
+  global:{n:"Yabancı / tematik hisse fonu",c:"var(--c4)",d:"Dolar bazlı büyüme. Teknoloji temalı fonlar son dönemde çok yükseldi, risk de yüksek."},
+  participation:{n:"Katılım hisse fonu",c:"var(--c4)",d:"Faizsiz finans ilkelerine uygun alternatif."},
+};
+function weights(){
+  const base={
+    low:{ppf:55,bond:10,gold:20,fx:10,equityTR:5,global:0},
+    mid:{ppf:30,bond:10,gold:20,fx:10,equityTR:18,global:12},
+    high:{ppf:12,bond:8,gold:15,fx:5,equityTR:32,global:28},
+  }[LAST.risk];
+  const w={...base}, why=[];
+  const realRate=((1+M.ppf1y/100)/(1+M.inflationAnnual/100)-1)*100;
+  if(realRate>5){w.ppf+=8;w.fx-=4;w.gold-=4;why.push(`PPF'nin son 1 yıllık getirisi (%${fmt(M.ppf1y,1)}) enflasyonun (%${fmt(M.inflationAnnual,1)}) belirgin üstünde, yaklaşık %${fmt(realRate,1)} reel getiri. Bu yüzden TL ağırlığı artırıldı, döviz ve altın azaltıldı.`)}
+  else if(realRate<0){w.ppf-=12;w.gold+=8;w.fx+=4;why.push("TL faizi enflasyonun altında kaldığı için altın ve döviz ağırlığı artırıldı.")}
+  if(M.policyNote&&/indir/i.test(M.policyNote)){w.bond+=4;w.ppf-=4;why.push("Merkez Bankası faiz indiriyor; indirim döneminde borçlanma araçları fonları öne çıkabilir.")}
+  if(LAST.horizon<=6){const m=w.equityTR+w.global;w.equityTR=0;w.global=0;w.ppf+=m;why.push("Vade 6 aydan kısa: hisse fonları kısa vadede zarar ettirebileceği için çıkarıldı.")}
+  else if(LAST.horizon<=12){const m=(w.equityTR+w.global)/2;w.equityTR/=2;w.global/=2;w.ppf+=m;why.push("Vade 1 yıldan kısa: hisse payı yarıya indirildi.")}
+  else if(LAST.horizon>=60){w.equityTR+=5;w.ppf-=5;why.push("Vade 3 yıldan uzun: hisse payı biraz artırıldı.")}
+  if((LAST.savLeft??LAST.savings)+LAST.em<LAST.monthlyNeed*3){w.ppf+=10;w.equityTR-=5;w.global-=5;why.push("Acil durum birikiminiz 3 aylık giderin altında; likit kalmak için PPF payı artırıldı.")}
+  Object.keys(w).forEach(k=>w[k]=Math.max(0,w[k]));
+  const s=Object.values(w).reduce((a,b)=>a+b,0)||1;Object.keys(w).forEach(k=>w[k]=w[k]/s*100);
+  return {w,why};
+}
+function renderInvest(){
+  const ov=parse($("#invOverride").value);
+  const amt=ov>0?ov:LAST.invest;
+  $("#invTotal").textContent=tl(amt);
+  if(amt<1){$("#inv").innerHTML=`<p class="sub" style="margin:0">Bu ay yatırıma kalan tutar yok. Öncelik borç ve acil fonda. Yine de bir tutar dağıtmak isterseniz yukarıya yazın.</p>`;$("#why").innerHTML="";return}
+  const {w,why}=weights();
+  const order=Object.entries(w).filter(([,p])=>p>0.5).sort((a,b)=>b[1]-a[1]);
+  $("#inv").innerHTML=`<div class="chartrow"><div class="donut" role="img" aria-label="Yatırım dağılımı grafiği">${donut(order.map(([k,p])=>({v:p,c:CH[k].c,n:CH[k].n})),100,"Yatırım",tl(amt))}</div><div class="legend">${order.map(([k,p])=>`<div class="lg"><span class="sw" style="background:${CH[k].c}"></span><span class="nm">${CH[k].n.split(" (")[0]}</span><span class="pct">%${fmt(p,0)}</span><span class="amt">${tl(amt*p/100)}</span></div>`).join("")}</div></div>`+
+    order.map(([k,p])=>{
+      let fl=(M.funds&&M.funds[k])||[];
+      if(k==="global"&&M.funds&&M.funds.participation)fl=fl.concat(M.funds.participation.slice(0,1));
+      const fh=fl.length?`<div class="funds">${fl.map(f=>`<span class="fund"><b>${esc(f.code)}</b> ${esc(f.name)}${f.ytd!=null?` · YBB %${fmt(f.ytd,1)}`:""}${f.r1y!=null?` · 1Y %${fmt(f.r1y,1)}`:""}</span>`).join("")}</div>`
+        :`<div class="funds"><span class="fund">TEFAS'ta “${esc(CH[k].n.split(" (")[0])}” kategorisinden düşük masraflı, büyük hacimli bir fon seçin</span></div>`;
+      return `<div class="ch" style="--chc:${CH[k].c}"><div class="top"><h3><span class="sw" style="display:inline-block;background:${CH[k].c};margin-right:8px"></span>${CH[k].n}</h3><span><span class="pct num" style="color:var(--muted);margin-right:8px">%${fmt(p,0)}</span><span class="amt">${tl(amt*p/100)}</span></span></div><p>${CH[k].d}</p>${fh}</div>`;
+    }).join("");
+  $("#why").innerHTML=why.length?`<div class="label" style="margin-bottom:6px">Neden bu dağılım?</div><ul class="notes">${why.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
+}
+$("#invOverride").addEventListener("input",()=>LAST&&renderInvest());
+
+// ---- kaydet / yükle (yalnızca bu tarayıcıda) ----
+const IDS=["salary","extra","rent","bills","otherfix","daily","savings","horizon"];
+function saveInputs(){const o={risk};IDS.forEach(id=>o[id]=$("#"+id).value);store.set("mp_inputs",o);store.set("mp_debts2",debts);if(!SYNC.applying&&SYNC.touched){store.set("mp_updated",Date.now());scheduleSync()}}
+
+// ---- hesap ve bulut kaydı (Supabase) — çevrimdışı öncelikli ----
+const CFG = window.MP_CONFIG || {};
+const CLOUD = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && !/BURAYA/.test(CFG.SUPABASE_URL));
+const SYNC={timer:null,applying:false,touched:false,busy:false};
+["input","change"].forEach(ev=>document.addEventListener(ev,e=>{if(e.isTrusted&&!e.target.closest("#authSec"))SYNC.touched=true},true));
+document.addEventListener("click",e=>{if(e.isTrusted&&e.target.closest("#risk,#addDebt,[data-del]"))SYNC.touched=true},true);
+function acct(state,text){const a=$("#acct");if(a)a.dataset.state=state;const s=$("#acctStatus");if(s)s.textContent=text}
+function snapshotPlan(){const o={risk};IDS.forEach(id=>o[id]=$("#"+id).value);return {inputs:o,debts:JSON.parse(JSON.stringify(debts))}}
+function applyPlan(p,at){
+  SYNC.applying=true;
+  try{
+    const o=p.inputs||{};IDS.forEach(id=>{if(o[id]!=null)$("#"+id).value=o[id]});
+    if(o.risk){risk=o.risk;$("#risk").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===risk?"true":"false"))}
+    if(Array.isArray(p.debts))debts=p.debts;
+    renderDebts();compute();
+    store.set("mp_updated",at||Date.now());
+  }finally{SYNC.applying=false}
+}
+
+// Supabase REST çağrıları (kütüphane gerektirmez)
+const AUTH={get s(){return store.get("mp_session")},set s(v){store.set("mp_session",v)}};
+async function sb(path,{method="GET",body,auth=true,headers={}}={}){
+  const h={"apikey":CFG.SUPABASE_ANON_KEY,"Content-Type":"application/json",...headers};
+  if(auth&&AUTH.s)h.Authorization="Bearer "+AUTH.s.access_token;
+  const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),12000);
+  try{
+    const r=await fetch(CFG.SUPABASE_URL.replace(/\/$/,"")+path,{method,headers:h,body:body?JSON.stringify(body):undefined,signal:ctl.signal});
+    const txt=await r.text();let data=null;try{data=txt?JSON.parse(txt):null}catch(e){data=txt}
+    if(!r.ok){const err=new Error((data&&(data.msg||data.error_description||data.message||data.error))||("HTTP "+r.status));err.status=r.status;throw err}
+    return data;
+  }finally{clearTimeout(t)}
+}
+function keepSession(d){if(!d||!d.access_token)return false;AUTH.s={access_token:d.access_token,refresh_token:d.refresh_token,expires_at:Date.now()+(d.expires_in||3600)*1000-60000,user:{id:d.user.id,email:d.user.email}};return true}
+async function ensureToken(){
+  const s=AUTH.s;if(!s)return false;
+  if(Date.now()<s.expires_at)return true;
+  try{const d=await sb("/auth/v1/token?grant_type=refresh_token",{method:"POST",auth:false,body:{refresh_token:s.refresh_token}});return keepSession(d)}
+  catch(e){if(e.status===400||e.status===401){AUTH.s=null;renderAuth();}throw e}
+}
+async function pushPlan(){
+  if(!CLOUD||!AUTH.s)return;
+  if(!navigator.onLine){store.set("mp_pending",true);acct("local","Çevrimdışı · internet gelince gönderilecek");return}
+  acct("saving","Kaydediliyor…");
+  try{
+    await ensureToken();
+    const at=store.get("mp_updated")||Date.now();
+    await sb("/rest/v1/plans?on_conflict=user_id",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:{user_id:AUTH.s.user.id,data:snapshotPlan(),updated_at:at}});
+    store.set("mp_pending",false);acct("synced","Bulutta kayıtlı");
+  }catch(e){store.set("mp_pending",true);acct(navigator.onLine?"error":"local",navigator.onLine?"Kaydedilemedi, tekrar denenecek":"Çevrimdışı · internet gelince gönderilecek")}
+}
+async function pullPlan(){
+  if(!CLOUD||!AUTH.s||!navigator.onLine||SYNC.busy)return;
+  SYNC.busy=true;
+  try{
+    await ensureToken();
+    const rows=await sb("/rest/v1/plans?select=data,updated_at&user_id=eq."+AUTH.s.user.id);
+    const row=rows&&rows[0];const localAt=store.get("mp_updated")||0;
+    if(store.get("mp_pending")) await pushPlan();
+    else if(row&&row.updated_at>localAt){applyPlan(row.data,row.updated_at);acct("synced","Buluttan güncellendi")}
+    else if(!row||row.updated_at<localAt) await pushPlan();
+    else acct("synced","Bulutta kayıtlı");
+  }catch(e){acct(navigator.onLine?"error":"local",navigator.onLine?"Buluta ulaşılamadı":"Çevrimdışı · kayıtlar bu cihazda")}
+  finally{SYNC.busy=false}
+}
+function scheduleSync(){
+  if(!CLOUD||!AUTH.s)return;
+  store.set("mp_pending",true);
+  clearTimeout(SYNC.timer);acct("saving","Kaydediliyor…");
+  SYNC.timer=setTimeout(pushPlan,1200);
+}
+function renderAuth(){
+  const s=AUTH.s;
+  $("#authOut").hidden=!!s;$("#authIn").hidden=!s;
+  if(!CLOUD){$("#acctName").textContent="Bulut kaydı kapalı";acct("local","Kayıtlar bu cihazda");
+    $("#authOut").innerHTML='<p class="sub" style="margin:0">Bulut kaydı henüz ayarlanmadı. Kurulum rehberindeki Supabase adımlarını tamamlayıp <b>config.js</b> dosyasını doldurun. Uygulama bu haliyle de çevrimdışı tam çalışır.</p>';return}
+  if(s){$("#acctName").textContent=s.user.email;$("#authEmail").textContent=s.user.email;
+    $("#acctImg").src="data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><circle cx='15' cy='15' r='15' fill='#00A67E'/><text x='15' y='20' font-size='14' text-anchor='middle' fill='#fff' font-family='sans-serif'>${(s.user.email[0]||"?").toUpperCase()}</text></svg>`)}
+  else{$("#acctName").textContent="Giriş yapın";acct("local","Kayıtlar bu cihazda")}
+}
+(function load(){const o=store.get("mp_inputs");if(!o)return;IDS.forEach(id=>{if(o[id]!=null)$("#"+id).value=o[id]});
+  if(o.risk){risk=o.risk;$("#risk").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===risk?"true":"false"))}})();
+IDS.forEach(id=>$("#"+id).addEventListener("input",compute));
+
+renderMarket();renderDebts();compute();
+
+// ---- küçültülebilir bölümler ----
+(function(){
+  const saved=store.get("mp_collapsed")||{};
+  const panels=[...document.querySelectorAll("section.panel")];
+  const chev='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function set(p,c){p.classList.toggle("collapsed",c);const b=p.querySelector(".tog");if(b)b.setAttribute("aria-expanded",String(!c));const id=p.getAttribute("aria-labelledby");if(id){saved[id]=c;store.set("mp_collapsed",saved)}}
+  panels.forEach(p=>{
+    const h=p.querySelector("h2");if(!h)return;
+    const btn=document.createElement("button");btn.type="button";btn.className="tog";btn.innerHTML=chev;btn.setAttribute("aria-label",h.textContent+" bölümünü küçült veya aç");btn.setAttribute("aria-expanded","true");
+    const wrap=document.createElement("div");wrap.className="hdrwrap";h.parentNode.insertBefore(wrap,h);wrap.appendChild(btn);wrap.appendChild(h);
+    if(p.firstElementChild!==wrap&&!p.firstElementChild.contains(wrap)){p.insertBefore(wrap,p.firstElementChild)}
+    h.classList.add("colhead");
+    const toggle=()=>set(p,!p.classList.contains("collapsed"));
+    btn.addEventListener("click",toggle);h.addEventListener("click",toggle);
+    const id=p.getAttribute("aria-labelledby");if(id&&saved[id])set(p,true);
+  });
+  $("#collapseAll").onclick=()=>panels.forEach(p=>set(p,true));
+  $("#expandAll").onclick=()=>panels.forEach(p=>set(p,false));
+})();
+
+// ---- açılış: piyasa verisi, hesap, çevrimiçi/çevrimdışı ----
+const MKEY="mp_market";
+function mergeM(d){return {...FALLBACK,...d,cc:{...FALLBACK.cc,...(d.cc||{})},funds:{...FALLBACK.funds,...(d.funds||{})}}}
+async function refreshMarket(){
+  if(!navigator.onLine)return;
+  let d=store.get(MKEY)||{};
+  if(CFG.MARKET_URL){
+    try{const r=await fetch(CFG.MARKET_URL+(CFG.MARKET_URL.includes("?")?"&":"?")+"t="+Date.now(),{cache:"no-store"});if(r.ok){const j=await r.json();const keep={usdtry:d.usdtry,usdPrev:d.usdPrev,eurtry:d.eurtry,eurPrev:d.eurPrev,fxNote:d.fxNote};d={...j};if(keep.fxNote)Object.assign(d,keep)}}catch(e){}
+  }
+  try{
+    const r=await fetch("https://www.tcmb.gov.tr/kurlar/today.xml",{cache:"no-store"});
+    if(r.ok){
+      const x=new DOMParser().parseFromString(await r.text(),"text/xml");
+      const g=c=>{const n=x.querySelector(`Currency[CurrencyCode="${c}"] ForexSelling`);return n?parseFloat(n.textContent):NaN};
+      const u=g("USD"),e=g("EUR");
+      if(u>0){if(d.usdtry&&Math.abs(d.usdtry-u)>1e-6)d.usdPrev=d.usdtry;d.usdtry=u}
+      if(e>0){if(d.eurtry&&Math.abs(d.eurtry-e)>1e-6)d.eurPrev=d.eurtry;d.eurtry=e}
+      const root=x.querySelector("Tarih_Date");if(u>0)d.fxNote="TCMB "+(root?root.getAttribute("Tarih"):"");
+      if(u>0)d.asOf=new Date().toISOString();
+    }
+  }catch(e){}
+  store.set(MKEY,d);M=mergeM(d);renderMarket();renderDebts();compute();
+}
+(function(){const c=store.get(MKEY);if(c){M=mergeM(c);renderMarket();renderDebts();compute()}})();
+
+// hesap paneli
+$("#acct").addEventListener("click",()=>{const a=$("#authSec");a.hidden=!a.hidden;a.classList.remove("collapsed");if(!a.hidden)a.scrollIntoView({behavior:"smooth",block:"start"})});
+const msg=(t,bad)=>{const m=$("#authMsg");m.textContent=t||"";m.style.color=bad?"var(--bad)":"var(--muted)"};
+const trErr=e=>{const m=String(e&&e.message||"");
+  if(/Invalid login/i.test(m))return"E-posta veya şifre hatalı.";
+  if(/already registered|already exists/i.test(m))return"Bu e-posta ile zaten hesap var. Giriş yapın.";
+  if(/Email not confirmed/i.test(m))return"E-posta henüz onaylanmamış. Gelen kutunuzdaki bağlantıya tıklayın.";
+  if(/Password should be/i.test(m))return"Şifre en az 6 karakter olmalı.";
+  if(e&&e.name==="AbortError"||/Failed to fetch|Network/i.test(m))return"İnternete bağlanılamadı.";
+  return"İşlem yapılamadı: "+m};
+function creds(){const email=$("#email").value.trim(),password=$("#pass").value;if(!/^\S+@\S+\.\S+$/.test(email)){msg("Geçerli bir e-posta yazın.",true);return null}if(password.length<6){msg("Şifre en az 6 karakter olmalı.",true);return null}return {email,password}}
+$("#authForm").addEventListener("submit",async e=>{
+  e.preventDefault();const c=creds();if(!c)return;msg("Giriş yapılıyor…");
+  try{const d=await sb("/auth/v1/token?grant_type=password",{method:"POST",auth:false,body:c});keepSession(d);$("#pass").value="";msg("");renderAuth();await pullPlan();$("#authSec").hidden=true}
+  catch(err){msg(trErr(err),true)}
+});
+$("#signupBtn").addEventListener("click",async()=>{
+  const c=creds();if(!c)return;msg("Hesap oluşturuluyor…");
+  try{const d=await sb("/auth/v1/signup",{method:"POST",auth:false,body:c});
+    if(keepSession(d)){$("#pass").value="";msg("Hesap oluşturuldu.");renderAuth();SYNC.touched=true;store.set("mp_updated",Date.now());await pushPlan()}
+    else msg("Hesap oluşturuldu. E-postanıza gelen onay bağlantısına tıklayıp burada giriş yapın.")}
+  catch(err){msg(trErr(err),true)}
+});
+$("#logoutBtn").addEventListener("click",async()=>{try{if(navigator.onLine&&AUTH.s)await sb("/auth/v1/logout",{method:"POST"})}catch(e){}AUTH.s=null;renderAuth();msg("Çıkış yapıldı. Bu cihazdaki kayıtlar duruyor.")});
+$("#syncNow").addEventListener("click",()=>{pullPlan()});
+
+let lastPull=0;
+window.addEventListener("online",()=>{refreshMarket();pullPlan()});
+window.addEventListener("offline",()=>{if(AUTH.s)acct("local","Çevrimdışı · kayıtlar bu cihazda")});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-lastPull>30000){lastPull=Date.now();pullPlan();refreshMarket()}});
+
+renderAuth();
+refreshMarket();
+if(AUTH.s){lastPull=Date.now();pullPlan()}
+</script>
+</body>
+</html>
